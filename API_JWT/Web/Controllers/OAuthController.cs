@@ -1,9 +1,13 @@
-﻿using System.Linq;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using Business.Interfaces;
 using Data.Interfaces;
 using Entity.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Web.Controllers
 {
@@ -14,6 +18,8 @@ namespace Web.Controllers
         private readonly IConfiguration _configuration;
         private readonly IUser _userData;
         private readonly IAuthService _authService;
+
+        // Flujo Authorization Code Grant
 
         // Simulacion en memoria
         private static readonly Dictionary<string, string> AuthCodes = [];
@@ -47,8 +53,6 @@ namespace Web.Controllers
 
             return Ok(new { code, redirect = $"{request.RedirectUri}?code={code}" });
         }
-
-
 
 
         //Intercambio de codigo por token
@@ -85,11 +89,71 @@ namespace Web.Controllers
         }
 
         [Authorize]
-        [HttpGet("protected/hello/")]
-        public IActionResult ProtectedHello()
+        [HttpGet("protected/saludar/")]
+        public IActionResult ProtectedSaludar()
         {
             var user = User.Identity?.Name ?? "Unknown";
-            return Ok(new { message = $"Hola {user}, accediste al recurso protegido vía OAuth 2.0" });
+            return Ok(new { message = $"Hola {user}, accediste al recurso protegido via OAuth" });
+        }
+
+        //===========================================================================================
+        //===========================================================================================
+
+        // Flujo Client Credentials Grant
+        [HttpPost("client/token/")]
+        public IActionResult ClientCredentials([FromForm] string client_id, [FromForm] string client_secret)
+        {
+            if (client_id != ClientId || client_secret != ClientSecret)
+                return Unauthorized("Credenciales de Cliente Invalidas");
+
+            // Simular token sin usuario
+            var claims = new[]
+            {
+                new Claim("client_id", client_id),
+                new Claim("scope", "api.read")
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var expires = DateTime.UtcNow.AddMinutes(3);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: expires,
+                signingCredentials: creds
+            );
+
+            return Ok(new
+            {
+                access_token = new JwtSecurityTokenHandler().WriteToken(token),
+                token_type = "Bearer",
+                expires_in = expires
+            });
+        }
+
+        //===========================================================================================
+        //===========================================================================================
+
+        // Flujo Resource Owner Password Grant(password grant)
+        [HttpPost("password/token/")]
+        public async Task<IActionResult> PasswordGrant([FromForm] string username, [FromForm] string password)
+        {
+            var user = await _userData.GetByUsernameAsync(username);
+            if (user == null || user.Password != password)
+                return Unauthorized("Credenciales Invalidas");
+
+            var role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? "User";
+            var tokenData = await _authService.GenerateTokenAsync(username);
+
+            return Ok(new
+            {
+                access_token = tokenData.Token,
+                token_type = "Bearer",
+                expires_in = tokenData.Expiration,
+                role
+            });
         }
     }
 }
