@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Web.Middleware
 {
@@ -15,24 +16,43 @@ namespace Web.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var path = context.Request.Path;
+            var endpoint = context.GetEndpoint();
+            var requiresAuth = endpoint?.Metadata?.GetMetadata<AuthorizeAttribute>() != null;
 
-            // Solo aplica a rutas protegidas
-            if (context.User.Identity?.IsAuthenticated == true)
+            if (requiresAuth)
             {
-                var username = context.User.Identity.Name;
-                var role = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                _logger.LogInformation("JWT válido para {Username} con rol {Role}", username, role);
-            }
-            else if (path.StartsWithSegments("/api/oauth/protected"))
-            {
-                // Ruta protegida sin token válido
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new
+                var isAuthenticated = context.User.Identity?.IsAuthenticated ?? false;
+
+                if (!isAuthenticated)
                 {
-                    error = "Token JWT inválido o ausente. Acceso denegado."
-                });
-                return;
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsJsonAsync(new { error = "Token inválido o ausente" });
+                    return;
+                }
+
+                var role = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                var username = context.User.Identity?.Name;
+
+                if (string.IsNullOrEmpty(role))
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsJsonAsync(new { error = "Token sin rol. Acceso denegado" });
+                    return;
+                }
+
+                // Solo permite rol "Administrador"
+                if (role != "Admin")
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        error = $"Acceso restringido. Se requiere rol 'Admin'. Tu rol: '{role}'",
+                        user = username
+                    });
+                    return;
+                }
+
+                _logger.LogInformation("Acceso autorizado: {Username} con rol {Role}", username, role);
             }
 
             await _next(context);
