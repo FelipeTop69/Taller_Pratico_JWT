@@ -14,7 +14,7 @@ namespace Web.Controllers
         {
             _authService = authService;
         }
-        [ApiExplorerSettings(IgnoreApi = true)] // Oculta el endpoint de Swagger y lo deshabilita
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("ejercicio1/")]
         public async Task<IActionResult> GenerateToken([FromBody] AuthRequestDTO request)
         {
@@ -25,6 +25,7 @@ namespace Web.Controllers
             return Ok(result);
         }
 
+        //[ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("ejercicio2/")]
         public async Task<IActionResult> AuthenticateBasic([FromBody] AuthRequestDTO request)
         {

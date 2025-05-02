@@ -20,23 +20,17 @@ namespace Business.Services
             _configuration = configuration;
         }
 
-        public async Task<AuthResponseDTO?> AuthenticateAsync(AuthRequestDTO request)
+        private string BuildToken(string username, string role)
         {
-            var user = await _userData.GetByUsernameAsync(request.Username);
-            if (user == null || user.Password != request.Password)
-                return null;
-
-            var role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? "User";
-
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Name, username),
                 new Claim(ClaimTypes.Role, role)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddMinutes(3);
+            var expires = DateTime.UtcNow.AddMinutes(30);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -46,12 +40,41 @@ namespace Business.Services
                 signingCredentials: creds
             );
 
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+
+        public async Task<AuthResponseDTO?> AuthenticateAsync(AuthRequestDTO request)
+        {
+            var user = await _userData.GetByUsernameAsync(request.Username);
+            if (user == null || user.Password != request.Password)
+                return null;
+
+            var role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? "User";
+            var token = BuildToken(user.Username, role);
+
             return new AuthResponseDTO
             {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Expiration = expires.ToLocalTime(),
+                Token = token,
+                Expiration = DateTime.UtcNow.AddMinutes(3).ToLocalTime(),
                 Username = user.Username,
                 Role = role
+            };
+        }
+
+        public async Task<AccessTokenDTO> GenerateTokenAsync(string username)
+        {
+            var user = await _userData.GetByUsernameAsync(username);
+            if (user == null)
+                throw new UnauthorizedAccessException("User not found");
+
+            var role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? "User";
+            var token = BuildToken(user.Username, role);
+
+            return new AccessTokenDTO
+            {
+                Token = token,
+                Expiration = DateTime.UtcNow.AddMinutes(3).ToLocalTime()    
             };
         }
     }

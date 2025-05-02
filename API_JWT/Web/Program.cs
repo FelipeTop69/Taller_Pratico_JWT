@@ -4,6 +4,7 @@ using Data;
 using Data.Interfaces;
 using Entity.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +21,7 @@ builder.Services.AddControllers();
 
 //Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerWithJwtSupport(); 
 
 //Base de Datos
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
