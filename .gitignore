@@ -1,0 +1,35 @@
+# Build artifacts
+API_JWT/*/bin/
+API_JWT/*/obj/
+API_JWT/*/out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+*.vscode/
+
+# Rider
+*.idea/
+
+# Dotnet tools & logs
+*.nupkg
+*.snupkg
+*.log
+
+# Auto-generated files
+Generated/
+*.generated.cs
+
+# Secrets and config
+*launchSettings.json
+*appsettings.Secrets.json
+
+# Global packages, tools, and cache
+API_JWT/.nuget/
+API_JWT/*/packages/
+API_JWT/.vs/
+
