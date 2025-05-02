@@ -4,7 +4,6 @@ using Data;
 using Data.Interfaces;
 using Entity.Context;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);

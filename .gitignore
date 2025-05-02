@@ -25,7 +25,6 @@ Generated/
 *.generated.cs
 
 # Secrets and config
-*launchSettings.json
 *appsettings.Secrets.json
 
 # Global packages, tools, and cache

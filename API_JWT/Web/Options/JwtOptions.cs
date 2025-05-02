@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace Web.Options
+﻿namespace Web.Options
 {
     public class JwtOptions
     {
