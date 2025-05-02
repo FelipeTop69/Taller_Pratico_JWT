@@ -28,7 +28,7 @@ namespace Web.Controllers
             _userData = userData;
         }
 
-        // Paso 1: Solicitud del codigo
+        // Solicitud del codigo
         [HttpPost("authorize/")]
         public async Task<IActionResult> Authorize([FromBody] AuthorizeRequestDTO request)
         {
@@ -51,7 +51,7 @@ namespace Web.Controllers
 
 
 
-        // Paso 2: Intercambio de código por token
+        //Intercambio de codigo por token
         [HttpPost("token/")]
         public async Task<IActionResult> Token([FromForm] string grant_type,
                                                [FromForm] string code,
@@ -84,7 +84,6 @@ namespace Web.Controllers
             });
         }
 
-        // Paso 3: Endpoint protegido
         [Authorize]
         [HttpGet("protected/hello/")]
         public IActionResult ProtectedHello()

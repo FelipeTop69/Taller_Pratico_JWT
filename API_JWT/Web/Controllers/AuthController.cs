@@ -25,7 +25,6 @@ namespace Web.Controllers
             return Ok(result);
         }
 
-        //[ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("ejercicio2/")]
         public async Task<IActionResult> AuthenticateBasic([FromBody] AuthRequestDTO request)
         {
@@ -36,6 +35,4 @@ namespace Web.Controllers
             return Ok(new { message = $"Bienvenido, {user.Username}" });
         }
     }
-
-
 }

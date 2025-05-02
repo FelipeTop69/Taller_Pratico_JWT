@@ -4,8 +4,8 @@ using Data;
 using Data.Interfaces;
 using Entity.Context;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using Web.Extensions;
+using Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +49,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+app.UseMiddleware<JwtValidationMiddleware>();
 
 app.UseAuthorization();
 
