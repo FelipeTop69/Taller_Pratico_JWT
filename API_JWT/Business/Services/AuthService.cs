@@ -23,7 +23,8 @@ namespace Business.Services
         public async Task<AuthResponseDTO?> AuthenticateAsync(AuthRequestDTO request)
         {
             var user = await _userData.GetByUsernameAsync(request.Username);
-            if (user == null) return null;
+            if (user == null || user.Password != request.Password)
+                return null;
 
             var role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? "User";
 

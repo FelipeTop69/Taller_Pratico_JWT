@@ -14,7 +14,7 @@ namespace Web.Controllers
         {
             _authService = authService;
         }
-
+        [ApiExplorerSettings(IgnoreApi = true)] // Oculta el endpoint de Swagger y lo deshabilita
         [HttpPost("ejercicio1/")]
         public async Task<IActionResult> GenerateToken([FromBody] AuthRequestDTO request)
         {
@@ -24,5 +24,17 @@ namespace Web.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("ejercicio2/")]
+        public async Task<IActionResult> AuthenticateBasic([FromBody] AuthRequestDTO request)
+        {
+            var user = await _authService.AuthenticateAsync(request);
+            if (user == null)
+                return Unauthorized(new { message = "Credenciales inválidas" });
+
+            return Ok(new { message = $"Bienvenido, {user.Username}" });
+        }
     }
+
+
 }
