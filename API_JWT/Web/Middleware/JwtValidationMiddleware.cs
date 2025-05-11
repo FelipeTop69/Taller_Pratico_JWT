@@ -41,7 +41,7 @@ namespace Web.Middleware
                 }
 
                 // Solo permite rol "Administrador"
-                if (role != "Admin")
+                if (role != "Administrador")
                 {
                     context.Response.StatusCode = StatusCodes.Status403Forbidden;
                     await context.Response.WriteAsJsonAsync(new
